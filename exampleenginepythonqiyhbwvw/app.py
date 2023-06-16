@@ -34,6 +34,7 @@ class Main:
         parameters = {}
         config = runtimeContext.getConfig()
         print(config.getString("params.devName"))
+        print(config.getString("params.jwk_date"))
         """print(config.getConfig("inputs.clients"))
         print(config.getString("params.date"))
         self.__logger.info("Hola " + config.getString("params.devName") + " hoy es " +
