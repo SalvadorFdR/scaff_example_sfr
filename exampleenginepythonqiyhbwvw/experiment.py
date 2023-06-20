@@ -3,6 +3,8 @@ from typing import Dict
 from dataproc_sdk.dataproc_sdk_utils.logging import get_user_logger
 from py4j.java_gateway import JavaObject
 from pyspark.sql import SparkSession
+from pyspark.sql.types import DateType
+
 from exampleenginepythonqiyhbwvw.business_logic.business_logic import BusinessLogic
 
 
@@ -38,18 +40,7 @@ class DataprocExperiment:
         # contracts_df.printSchema()
         products_df.show()
         # products_df.printSchema()"""
-        """clients_df = self.read_csv("clients", parameters)
-        contracts_df = self.read_csv("contracts", parameters)
-        products_df = self.read_csv("products", parameters)
-        logic = BusinessLogic()
-        filtered_clients_df = logic.filter_by_age_and_vip(clients_df)
-        filtered_clients_df.show()
-        joined_df = logic.join_tables(clients_df, contracts_df, products_df)
-        joined_df.show()
-        filtered_by_contracts_df = logic.filter_by_number_of_contracts(joined_df)
-        filtered_by_contracts_df.show()
-        hashed_df = logic.hash_columns(filtered_by_contracts_df)
-        hashed_df.show(20, False)"""
+        # Ejercicios de la sesión 5 de engine
         logic = BusinessLogic()
         customers_df = self.read_parquet("t_fdev_customers", parameters)
         phones_df = self.read_parquet("t_fdev_phoner", parameters)
@@ -86,7 +77,33 @@ class DataprocExperiment:
         date = self.get_date_config("jwk_date", parameters)
         print(date)
         date_df = logic.agg_jwk_date(join_tables_3, date)
-        date_df.show()
+        print("Regla 10:")
+        age_df = logic.calculate_date(date_df)
+        age_df.printSchema()
+        age_df.show()
+        age_df.write.mode("overwrite") \
+            .partitionBy("jwk_date") \
+            .option("partitionOverwriteMode", "dynamic") \
+            .parquet(str(parameters["output_2"]))
+        clients_df = self.read_csv("clients", parameters)
+        contracts_df = self.read_csv("contracts", parameters)
+        products_df = self.read_csv("products", parameters)
+        filtered_clients_df = logic.filter_by_age_and_vip(clients_df)
+        # filtered_clients_df.show()
+        joined_df = logic.join_tables(clients_df, contracts_df, products_df)
+        # joined_df.show()
+        filtered_by_contracts_df = logic.filter_by_number_of_contracts(joined_df)
+        # filtered_by_contracts_df.show()
+        hashed_df = logic.hash_columns(filtered_by_contracts_df)
+        # hashed_df.show(20, False)
+        # self.__spark.read.parquet("resources/data/output/final_table/cod_producto=700/activo=false").show()
+        hashed_df.write.mode("overwrite")\
+            .partitionBy("cod_producto", "activo")\
+            .option("partitionOverwriteMode", "dynamic")\
+            .parquet(str(parameters["output"]))
+        customers_df = self.read_parquet("t_fdev_customers", parameters)
+        # customers_df.show()
+
 
     def read_csv(self, table_id, parameters):
         return self.__spark.read\

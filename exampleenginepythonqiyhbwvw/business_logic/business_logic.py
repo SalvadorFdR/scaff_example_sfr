@@ -9,6 +9,7 @@ import os
 import re
 from typing import Dict
 from py4j.protocol import Py4JJavaError
+from pyspark.sql.types import DateType
 
 
 class BusinessLogic:
@@ -96,19 +97,16 @@ class BusinessLogic:
     def agg_jwk_date(self, df: DataFrame, fecha: str) -> DataFrame:
         return df.withColumn("jwk_date", f.lit(fecha))
 
-    """def agg_jwk_date_2(self, df: DataFrame, runtimeContext: JavaObject) -> DataFrame:
-        config = runtimeContext.getConfig()
-        print(config.getString("params.jwk_date"))
-        jwk = config.get("params.jwk_date")
-        add_jwk = df.withColumn("jwk", f.lit(jwk))
-        return add_jwk"""
-
     def final_price(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter final_price:")
         df = df.withColumn("final_price", (f.col("price_product") + f.col("taxes") -
                                            f.col("discount_amount") - f.col("discount_extra")))
         df = df.select(f.avg(f.col("final_price")).alias("average_final"))
         return df
+
+    def calculate_date(self, df: DataFrame) -> DataFrame:
+        self.__logger.info("Applying calculate age:")
+        return df.withColumn("age", (f.floor((f.months_between(f.current_date(), f.col("birth_date")) / 12))))
 
     def final_price_7(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter final_price:")
@@ -128,8 +126,7 @@ class BusinessLogic:
 
     def join_tables_3(self, customers_df: DataFrame, phones_df: DataFrame) -> DataFrame:
         self.__logger.info("Applying join process, phones, customers")
-        joined_df = customers_df.join(phones_df, (customers_df["customer_id"] == phones_df["customer_id"]) &
-                                      (customers_df["delivery_id"] == phones_df["delivery_id"]), "inner")
+        joined_df = customers_df.join(phones_df, (["customer_id", "delivery_id"]), "inner")
         return joined_df
 
     def filter_by_number_of_contracts(self, df: DataFrame) -> DataFrame:
