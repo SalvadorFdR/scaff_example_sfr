@@ -9,7 +9,7 @@ import os
 import re
 from typing import Dict
 from py4j.protocol import Py4JJavaError
-from pyspark.sql.types import DateType
+import pyspark.sql.types as t
 
 
 class BusinessLogic:
@@ -22,6 +22,24 @@ class BusinessLogic:
         Constructor
         """
         self.__logger = get_user_logger(BusinessLogic.__qualname__)
+
+    def select_all_columns(self, df: DataFrame) -> DataFrame:
+        self.__logger.info("Selecting all columns")
+        return df.select(
+            f.col("cod_producto").cast(t.StringType()),
+            f.col("cod_iuc").cast(t.StringType()),
+            f.col("cod_titular").cast(t.StringType()),
+            f.col("fec_alta").cast(t.DateType()),
+            f.col("activo").cast(t.BooleanType()),
+            f.col("cod_client").cast(t.StringType()),
+            f.col("nombre").cast(t.StringType()),
+            f.col("edad").cast(t.IntegerType()),
+            f.col("provincia").cast(t.StringType()),
+            f.col("cod_postal").cast(t.IntegerType()),
+            f.col("vip").cast(t.BooleanType()),
+            f.col("desc_producto").cast(t.StringType()),
+            f.col("hash").cast(t.StringType())
+        )
 
     def filter_by_age_and_vip(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter by ages and vip status")

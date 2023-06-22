@@ -4,9 +4,10 @@ from dataproc_sdk.dataproc_sdk_utils.logging import get_user_logger
 from py4j.java_gateway import JavaObject
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DateType
-
+from dataproc_sdk import DatioPysparkSession, DatioSchema
 from exampleenginepythonqiyhbwvw.business_logic.business_logic import BusinessLogic
-
+from exampleenginepythonqiyhbwvw.io.init_values import InitValues
+import pyspark.sql.functions as f
 
 class DataprocExperiment:
     """
@@ -18,7 +19,7 @@ class DataprocExperiment:
         Constructor
         """
         self.__logger = get_user_logger(DataprocExperiment.__qualname__)
-        self.__spark = SparkSession.builder.getOrCreate()
+        self.__datio_pyspark_session = DatioPysparkSession().get_or_create()
 
     def run(self, **parameters: Dict) -> None:
         """
@@ -39,7 +40,7 @@ class DataprocExperiment:
         contracts_df.show()
         # contracts_df.printSchema()
         products_df.show()
-        # products_df.printSchema()"""
+        # products_df.printSchema()
         # Ejercicios de la sesión 5 de engine
         logic = BusinessLogic()
         customers_df = self.read_parquet("t_fdev_customers", parameters)
@@ -102,20 +103,43 @@ class DataprocExperiment:
             .option("partitionOverwriteMode", "dynamic")\
             .parquet(str(parameters["output"]))
         customers_df = self.read_parquet("t_fdev_customers", parameters)
-        # customers_df.show()
+        # customers_df.show()"""
 
+        # Video 7 de engine
+        # LECTURA
+        init_values = InitValues()
+        init_values.initialize_inputs(parameters)
+        clients_df, contracts_df, products_df, output_path, output_schema = \
+            init_values.initialize_inputs(parameters)
+        # TRANSFORMACIONES
+        logic = BusinessLogic()
+        filtered_clients_df = logic.filter_by_age_and_vip(clients_df)
+        joined_df = logic.join_tables(clients_df, contracts_df, products_df)
+        filtered_by_contracts_df = logic.filter_by_number_of_contracts(joined_df)
+        hashed_df = logic.hash_columns(filtered_by_contracts_df)
+        final_df = hashed_df\
+            .withColumn("hash", f.when(f.col("activo") == "false", f.lit("0"))
+                        .otherwise(f.col("hash"))).filter(f.col("hash") == "0")
+        final_df.printSchema()
+        # ESCRITURA
+        self.__datio_pyspark_session.write().mode("overwrite")\
+            .option("partitionOverwriteMode", "dynamic")\
+            .partition_by(["cod_producto", "activo"])\
+            .datio_schema(output_schema)\
+            .parquet(logic.select_all_columns(final_df), output_path)
 
-    def read_csv(self, table_id, parameters):
+    """def read_csv(self, table_id, parameters):
         return self.__spark.read\
             .option("header", "true")\
             .option("delimiter", ",")\
-            .option("inferschema", "true").csv(str(parameters[table_id]))
+            .option("inferschema", "true")\
+            .csv(str(parameters[table_id]))
 
     def read_parquet(self, table_id, parameters):
         return self.__spark.read.parquet(str(parameters[table_id]))
 
     def read_parquet_2(self, table_id, parameters):
-        return self.__spark.read.option("header", "true").parquet(str(parameters[table_id]))
+        return self.__spark.read.option("header", "true").parquet(str(parameters[table_id]))"""
 
     def get_date_config(self, table_id, parameters):
         return str(parameters[table_id])
