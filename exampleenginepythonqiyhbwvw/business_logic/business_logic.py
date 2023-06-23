@@ -41,6 +41,30 @@ class BusinessLogic:
             f.col("hash").cast(t.StringType())
         )
 
+    def select_all_columns_2(self, df: DataFrame) -> DataFrame:
+        self.__logger.info("Selecting all columns")
+        return df.select(
+            f.col("city_name").cast(t.StringType()),
+            f.col("street_name").cast(t.StringType()),
+            f.col("credit_card_number").cast(t.StringType()),
+            f.col("last_name").cast(t.StringType()),
+            f.col("first_name").cast(t.StringType()),
+            f.col("age").cast(t.IntegerType()),
+            f.col("brand").cast(t.StringType()),
+            f.col("model").cast(t.StringType()),
+            f.col("nfc").cast(t.StringType()),
+            f.col("country_code").cast(t.StringType()),
+            f.col("prime").cast(t.StringType()),
+            f.col("customer_vip").cast(t.StringType()),
+            f.col("taxes").cast(t.DecimalType(9, 2)),
+            f.col("price_product").cast(t.DecimalType(9, 2)),
+            f.col("discount_amount").cast(t.DecimalType(9, 2)),
+            f.col("discount_extra").cast(t.DecimalType(9, 2)).alias("extra_discount"),
+            f.col("final_price").cast(t.DecimalType(9, 2)),
+            f.col("top_50").cast(t.IntegerType()).alias("brands_top"),
+            f.col("jwk_date").cast(t.DateType())
+        )
+
     def filter_by_age_and_vip(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter by ages and vip status")
         return df.filter((f.col("edad") >= 30) & (f.col("edad") <= 50) & (f.col("vip") == "true"))
@@ -63,7 +87,6 @@ class BusinessLogic:
         df = df.withColumn("customer_vip",
                            f.when((f.col("prime") == "Yes") & (f.col("price_product") >= 7500.00), "Yes")
                            .otherwise("No"))
-        df = df.filter(f.col("customer_vip") == "Yes")
         return df
 
     def discount_extra(self, df: DataFrame) -> DataFrame:
@@ -119,7 +142,6 @@ class BusinessLogic:
         self.__logger.info("Applying filter final_price:")
         df = df.withColumn("final_price", (f.col("price_product") + f.col("taxes") -
                                            f.col("discount_amount") - f.col("discount_extra")))
-        df = df.select(f.avg(f.col("final_price")).alias("average_final"))
         return df
 
     def calculate_date(self, df: DataFrame) -> DataFrame:

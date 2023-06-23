@@ -105,7 +105,7 @@ class DataprocExperiment:
         customers_df = self.read_parquet("t_fdev_customers", parameters)
         # customers_df.show()"""
 
-        # Video 7 de engine
+        """# Video 7 de engine
         # LECTURA
         init_values = InitValues()
         init_values.initialize_inputs(parameters)
@@ -126,7 +126,64 @@ class DataprocExperiment:
             .option("partitionOverwriteMode", "dynamic")\
             .partition_by(["cod_producto", "activo"])\
             .datio_schema(output_schema)\
-            .parquet(logic.select_all_columns(final_df), output_path)
+            .parquet(logic.select_all_columns(final_df), output_path)"""
+
+        # LECTURA
+        init_values = InitValues()
+        init_values.initialize_inputs_2(parameters)
+        customers_df, phones_df, output_path, output_schema = \
+            init_values.initialize_inputs_2(parameters)
+        customers_df.printSchema()
+        phones_df.printSchema()
+        phones_df.show()
+        customers_df.show()
+
+        # TRANSFORMACIONES
+        logic = BusinessLogic()
+        phones_filtered = logic.filter_by_date_phones(phones_df)
+        customers_filtered = logic.filter_by_date_costumers(customers_df)
+        # print(logic.join_tables_3(customers_df, phones_df).count())
+        join_tables_3 = logic.join_tables_3(customers_filtered, phones_filtered)
+        print("Regla 3:")
+        join_tables_3.show()
+        print(join_tables_3.count())
+        print("Regla 4:")
+        filter_vip_df = logic.filter_vip(join_tables_3)
+        print(filter_vip_df.count())
+        print("Regla 5:")
+        discount_extra_df = logic.discount_extra(filter_vip_df)
+        print(discount_extra_df.count())
+        print("Regla 6:")
+        discount_extra_df_6 = logic.discount_extra_6(filter_vip_df)
+        final_price_6 = logic.final_price(discount_extra_df_6)
+        final_price_6.show()
+        print("Regla 7:")
+        # discount_extra_df_7 = logic.discount_extra_6(join_tables_3)
+        final_price_7 = logic.final_price_7(final_price_6)
+        final_price_7.show()
+        top50_df = logic.count_top_50(final_price_7)
+        print("Regla 8:")
+        nfc_count = logic.replace_nfc(top50_df)
+        nfc = logic.count_no_records(nfc_count)
+        print(nfc)
+        print("Regla 9:")
+        date = self.get_date_config("jwk_date", parameters)
+        print(date)
+        date_df = logic.agg_jwk_date(nfc_count, date)
+        print("Regla 10:")
+        age_df = logic.calculate_date(date_df)
+        age_df.printSchema()
+        # age_df.show()
+        print("Imprimiendo schema final")
+        super_final_df = logic.select_all_columns_2(age_df)
+        super_final_df.printSchema()
+        super_final_df.show()
+
+        # ESCRITURA
+        self.__datio_pyspark_session.write().mode("overwrite") \
+            .option("partitionOverwriteMode", "dynamic") \
+            .datio_schema(output_schema) \
+            .parquet(super_final_df, output_path)
 
     """def read_csv(self, table_id, parameters):
         return self.__spark.read\
