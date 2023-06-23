@@ -7,6 +7,9 @@ from pyspark.sql.types import DateType
 from dataproc_sdk import DatioPysparkSession, DatioSchema
 from exampleenginepythonqiyhbwvw.business_logic.business_logic import BusinessLogic
 from exampleenginepythonqiyhbwvw.io.init_values import InitValues
+import exampleenginepythonqiyhbwvw.common.constants as c
+import exampleenginepythonqiyhbwvw.common.input as i
+import exampleenginepythonqiyhbwvw.common.output as o
 import pyspark.sql.functions as f
 
 class DataprocExperiment:
@@ -111,22 +114,25 @@ class DataprocExperiment:
         init_values.initialize_inputs(parameters)
         clients_df, contracts_df, products_df, output_path, output_schema = \
             init_values.initialize_inputs(parameters)
+        clients_df.printSchema()
+        contracts_df.printSchema()
+        products_df.printSchema()
         # TRANSFORMACIONES
         logic = BusinessLogic()
         filtered_clients_df = logic.filter_by_age_and_vip(clients_df)
         joined_df = logic.join_tables(clients_df, contracts_df, products_df)
         filtered_by_contracts_df = logic.filter_by_number_of_contracts(joined_df)
         hashed_df = logic.hash_columns(filtered_by_contracts_df)
-        final_df = hashed_df\
-            .withColumn("hash", f.when(f.col("activo") == "false", f.lit("0"))
-                        .otherwise(f.col("hash"))).filter(f.col("hash") == "0")
-        final_df.printSchema()
+        hashed_df = logic.select_all_columns(hashed_df)
+        hashed_df.show()
+        hashed_df.printSchema()
+
         # ESCRITURA
-        self.__datio_pyspark_session.write().mode("overwrite")\
-            .option("partitionOverwriteMode", "dynamic")\
-            .partition_by(["cod_producto", "activo"])\
+        self.__datio_pyspark_session.write().mode(c.OVERWRITE)\
+            .option(c.MODE, c.DYNAMIC)\
+            .partition_by([i.cod_producto.name, i.activo.name])\
             .datio_schema(output_schema)\
-            .parquet(logic.select_all_columns(final_df), output_path)"""
+            .parquet(hashed_df, output_path)"""
 
         # LECTURA
         init_values = InitValues()
@@ -144,44 +150,44 @@ class DataprocExperiment:
         customers_filtered = logic.filter_by_date_costumers(customers_df)
         # print(logic.join_tables_3(customers_df, phones_df).count())
         join_tables_3 = logic.join_tables_3(customers_filtered, phones_filtered)
-        print("Regla 3:")
+        print(c.RULE_3)
         join_tables_3.show()
         print(join_tables_3.count())
-        print("Regla 4:")
+        print(c.RULE_4)
         filter_vip_df = logic.filter_vip(join_tables_3)
         print(filter_vip_df.count())
-        print("Regla 5:")
+        print(c.RULE_5)
         discount_extra_df = logic.discount_extra(filter_vip_df)
         print(discount_extra_df.count())
-        print("Regla 6:")
+        print(c.RULE_6)
         discount_extra_df_6 = logic.discount_extra_6(filter_vip_df)
         final_price_6 = logic.final_price(discount_extra_df_6)
         final_price_6.show()
-        print("Regla 7:")
+        print(c.RULE_7)
         # discount_extra_df_7 = logic.discount_extra_6(join_tables_3)
         final_price_7 = logic.final_price_7(final_price_6)
         final_price_7.show()
         top50_df = logic.count_top_50(final_price_7)
-        print("Regla 8:")
+        print(c.RULE_8)
         nfc_count = logic.replace_nfc(top50_df)
         nfc = logic.count_no_records(nfc_count)
         print(nfc)
-        print("Regla 9:")
-        date = self.get_date_config("jwk_date", parameters)
+        print(c.RULE_9)
+        date = self.get_date_config(c.JWK_DATE, parameters)
         print(date)
         date_df = logic.agg_jwk_date(nfc_count, date)
-        print("Regla 10:")
+        print(c.RULE_10)
         age_df = logic.calculate_date(date_df)
         age_df.printSchema()
         # age_df.show()
-        print("Imprimiendo schema final")
+        print(c.FINAL_MSG)
         super_final_df = logic.select_all_columns_2(age_df)
         super_final_df.printSchema()
         super_final_df.show()
 
         # ESCRITURA
-        self.__datio_pyspark_session.write().mode("overwrite") \
-            .option("partitionOverwriteMode", "dynamic") \
+        self.__datio_pyspark_session.write().mode(c.OVERWRITE) \
+            .option(c.MODE, c.DYNAMIC) \
             .datio_schema(output_schema) \
             .parquet(super_final_df, output_path)
 

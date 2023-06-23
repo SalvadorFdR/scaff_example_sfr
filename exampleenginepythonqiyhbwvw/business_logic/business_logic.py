@@ -1,16 +1,11 @@
 import configparser
 
 from dataproc_sdk.dataproc_sdk_utils.logging import get_user_logger
-from py4j.java_gateway import JavaObject
 from pyspark.sql import DataFrame, Window
 import pyspark.sql.functions as f
-import json
-import os
-import re
-from typing import Dict
-from py4j.protocol import Py4JJavaError
 import pyspark.sql.types as t
-
+import exampleenginepythonqiyhbwvw.common.input as i
+import exampleenginepythonqiyhbwvw.common.output as o
 
 class BusinessLogic:
     """
@@ -26,19 +21,19 @@ class BusinessLogic:
     def select_all_columns(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Selecting all columns")
         return df.select(
-            f.col("cod_producto").cast(t.StringType()),
-            f.col("cod_iuc").cast(t.StringType()),
-            f.col("cod_titular").cast(t.StringType()),
-            f.col("fec_alta").cast(t.DateType()),
-            f.col("activo").cast(t.BooleanType()),
-            f.col("cod_client").cast(t.StringType()),
-            f.col("nombre").cast(t.StringType()),
-            f.col("edad").cast(t.IntegerType()),
-            f.col("provincia").cast(t.StringType()),
-            f.col("cod_postal").cast(t.IntegerType()),
-            f.col("vip").cast(t.BooleanType()),
-            f.col("desc_producto").cast(t.StringType()),
-            f.col("hash").cast(t.StringType())
+            i.cod_producto().cast(t.StringType()),
+            i.cod_iuc().cast(t.StringType()),
+            i.cod_titular().cast(t.StringType()),
+            i.fec_alta().cast(t.DateType()),
+            i.activo().cast(t.BooleanType()),
+            i.cod_client().cast(t.StringType()),
+            i.nombre().cast(t.StringType()),
+            i.edad().cast(t.IntegerType()),
+            i.provincia().cast(t.StringType()),
+            i.cod_postal().cast(t.IntegerType()),
+            i.vip().cast(t.BooleanType()),
+            i.desc_producto().cast(t.StringType()),
+            o.hash().cast(t.StringType())
         )
 
     def select_all_columns_2(self, df: DataFrame) -> DataFrame:
