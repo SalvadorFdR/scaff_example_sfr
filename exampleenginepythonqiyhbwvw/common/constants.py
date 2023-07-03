@@ -1,9 +1,12 @@
 THREE_NUMBER: int = 3
 ZERO_NUMER: str = "0"
+THIRTY_NUMBER: int = 30
+FIFTY_NUMBER: int = 50
 
 FALSE: bool = False
 TRUE: bool = True
 TRUE_STRING: str = "true"
+YES_STRING: str = "Yes"
 HEADER: str = "header"
 DELIMITER: str = "delimiter"
 COMMA: str = ","

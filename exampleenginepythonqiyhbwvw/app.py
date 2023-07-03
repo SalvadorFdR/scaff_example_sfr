@@ -32,9 +32,8 @@ class Main:
         """
         ret_code = 0
         parameters = {}
-        config = runtimeContext.getConfig()
-        print(config.getString("params.devName"))
-        print(config.getString("params.jwk_date"))
+        # config = runtimeContext.getConfig()
+
         """print(config.getConfig("inputs.clients"))
         print(config.getString("params.date"))
         self.__logger.info("Hola " + config.getString("params.devName") + " hoy es " +
@@ -43,6 +42,8 @@ class Main:
         # Reading config file for input and output paths
         try:
             config = runtimeContext.getConfig()
+            print(config.getString("params.devName"))
+            print(config.getString("params.jwk_date"))
             if not config.isEmpty():
                 root_key = "EnvironmentVarsPM"
                 parameters = get_params_from_runtime(runtimeContext, root_key)

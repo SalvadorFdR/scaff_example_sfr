@@ -7,6 +7,7 @@ import pyspark.sql.types as t
 import exampleenginepythonqiyhbwvw.common.input as i
 import exampleenginepythonqiyhbwvw.common.output as o
 
+
 class BusinessLogic:
     """
     Just a wrapper class to ease the user code execution.
@@ -54,7 +55,7 @@ class BusinessLogic:
             f.col("taxes").cast(t.DecimalType(9, 2)),
             f.col("price_product").cast(t.DecimalType(9, 2)),
             f.col("discount_amount").cast(t.DecimalType(9, 2)),
-            f.col("discount_extra").cast(t.DecimalType(9, 2)).alias("extra_discount"),
+            f.col("extra_discount").cast(t.DecimalType(9, 2)).alias("extra_discount"),
             f.col("final_price").cast(t.DecimalType(9, 2)),
             f.col("top_50").cast(t.IntegerType()).alias("brands_top"),
             f.col("jwk_date").cast(t.DateType())
@@ -86,7 +87,7 @@ class BusinessLogic:
 
     def discount_extra(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter discount_extra:")
-        df = df.withColumn("discount_extra",
+        df = df.withColumn("extra_discount",
                            f.when((f.col("prime") == "Yes") &
                                   (f.col("stock_number") < 35) &
                                   ((f.col("brand") != "XOLO") &
@@ -95,12 +96,12 @@ class BusinessLogic:
                                    (f.col("brand") != "BlackBerry")),
                                   f.col("price_product") * 0.10)
                            .otherwise(0.00))
-        df = df.filter(f.col("discount_extra") > 0.00)
+        # df = df.filter(f.col("discount_extra") > 0.00)
         return df
 
     def discount_extra_6(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter discount_extra:")
-        df = df.withColumn("discount_extra",
+        df = df.withColumn("extra_discount",
                            f.when((f.col("prime") == "Yes") &
                                   (f.col("stock_number") < 35) &
                                   ((f.col("brand") != "XOLO") &
@@ -136,7 +137,7 @@ class BusinessLogic:
     def final_price(self, df: DataFrame) -> DataFrame:
         self.__logger.info("Applying filter final_price:")
         df = df.withColumn("final_price", (f.col("price_product") + f.col("taxes") -
-                                           f.col("discount_amount") - f.col("discount_extra")))
+                                           f.col("discount_amount") - f.col("extra_discount")))
         return df
 
     def calculate_date(self, df: DataFrame) -> DataFrame:
@@ -156,7 +157,7 @@ class BusinessLogic:
 
     def join_tables(self, clients_df: DataFrame, contracts_df: DataFrame, products: DataFrame) -> DataFrame:
         self.__logger.info("Applying join process")
-        return clients_df.join(contracts_df, (f.col("cod_client") == f.col("cod_titular")), "inner")\
+        return clients_df.join(contracts_df, (f.col("cod_client") == f.col("cod_titular")), "inner") \
             .join(products, ["cod_producto"], "inner")
 
     def join_tables_3(self, customers_df: DataFrame, phones_df: DataFrame) -> DataFrame:

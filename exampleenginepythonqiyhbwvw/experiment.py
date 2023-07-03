@@ -147,7 +147,9 @@ class DataprocExperiment:
         # TRANSFORMACIONES
         logic = BusinessLogic()
         phones_filtered = logic.filter_by_date_phones(phones_df)
+        phones_filtered.show()
         customers_filtered = logic.filter_by_date_costumers(customers_df)
+        customers_filtered.show()
         # print(logic.join_tables_3(customers_df, phones_df).count())
         join_tables_3 = logic.join_tables_3(customers_filtered, phones_filtered)
         print(c.RULE_3)
@@ -156,6 +158,8 @@ class DataprocExperiment:
         print(c.RULE_4)
         filter_vip_df = logic.filter_vip(join_tables_3)
         print(filter_vip_df.count())
+        filter_vip_df.show()
+        filter_vip_df.printSchema()
         print(c.RULE_5)
         discount_extra_df = logic.discount_extra(filter_vip_df)
         print(discount_extra_df.count())
