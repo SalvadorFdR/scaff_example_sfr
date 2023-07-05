@@ -8,11 +8,7 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 
 
-def before_all(context: Context):
-    context.main_dir = abspath("%s/../.." % dirname(__file__))
-    context.resources_dir = realpath("%s/resources" % context.main_dir)
-    os.environ['RESOURCES_DIR'] = context.resources_dir
-
+def init_spark_session():
     jars_path = str(Path(sys.prefix) / 'share' / 'sdk' / 'jars' / 'dataproc-sdk-all-*.jar')
     jars_list = glob.glob(jars_path)
     if jars_list:
@@ -21,11 +17,17 @@ def before_all(context: Context):
         raise FileNotFoundError(f"Dataproc SDK jar not found in {jars_path}, have you installed the requirements?")
 
     # Initialize Spark session
-    SparkSession.builder \
+    return SparkSession.builder \
         .appName("testAT") \
         .config("spark.jars", sdk_path) \
         .master("local[*]") \
         .getOrCreate()
+
+
+def before_all(context: Context):
+    context.main_dir = abspath("%s/../.." % dirname(__file__))
+    context.resources_dir = realpath("%s/resources" % context.main_dir)
+    os.environ['RESOURCES_DIR'] = context.resources_dir
 
 
 def before_scenario(context: Context, scenario: Scenario):
